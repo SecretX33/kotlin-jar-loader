@@ -27,8 +27,13 @@ application {
     mainClass.set(mainClassName)
 }
 
-tasks.register("buildExampleJars") {
+val buildExampleJars by tasks.registering {
+    group = "build"
     dependsOn(":example-jar-one:jar", ":example-jar-two:jar", ":example-jar-three:jar")
+}
+
+tasks.build {
+    dependsOn(buildExampleJars)
 }
 
 allprojects {

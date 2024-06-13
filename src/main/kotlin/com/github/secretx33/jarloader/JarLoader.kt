@@ -5,6 +5,7 @@ import kotlin.io.path.Path
 import kotlin.io.path.div
 import kotlin.io.path.extension
 import kotlin.io.path.invariantSeparatorsPathString
+import kotlin.io.path.isDirectory
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.name
@@ -12,14 +13,14 @@ import kotlin.io.path.toPath
 
 fun main() {
     val libsFolder = getLibsFolder()
-    val jarsToLoad = libsFolder.listDirectoryEntries()
+    val jarsToLoad = libsFolder.takeIf { it.isDirectory() }?.listDirectoryEntries().orEmpty()
         .filter { it.isRegularFile() && it.extension == "jar" && it.name.startsWith("example-") }
         .ifEmpty {
             System.err.println("No example jars found in folder '$libsFolder'. Did you forget to build the example jars? If so, please check the project README file.")
             return
         }
 
-    val jarClassLoader = JarClassLoader(parent = ClassLoader.getSystemClassLoader())
+    val jarClassLoader = JarClassLoader(parent = Dummy::class.java.classLoader)
     jarsToLoad.forEach {
         jarClassLoader.addURL(it.toUri().toURL())
     }
@@ -48,6 +49,6 @@ private fun mainClass(name: String): String = "com.github.secretx33.$name"
 private fun getLibsFolder(): Path = getProjectFolder() / "build" / "libs"
 
 private fun getProjectFolder(): Path = Path(Dummy::class.java.protectionDomain.codeSource.location.toURI().toPath().toAbsolutePath().invariantSeparatorsPathString
-    .substringBeforeLast("/build"))
+    .substringBeforeLast("/build/"))
 
 private class Dummy
